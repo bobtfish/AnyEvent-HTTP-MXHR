@@ -1,6 +1,8 @@
 Changes
 =======
 
+    * Add mxhr_request function for request types other than GET.
+
 0.00005 - 24 Feb 2010
     * Fix resetting on_error handlers being ignored.
     * Now on_error/on_eof does not free the current client.

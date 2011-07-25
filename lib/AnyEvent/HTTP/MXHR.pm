@@ -4,11 +4,18 @@ use AnyEvent::HTTP;
 use AnyEvent::Util qw(guard);
 use base qw(Exporter);
 our @EXPORT = qw(mxhr_get);
+our @EXPORT_OK = qw(mxhr_request);
 our $VERSION = '0.00005';
 
 sub mxhr_get ($@) {
     my $cb = pop;
     my ($uri, %args) = @_;
+    mxhr_request('GET', $uri, %args, $cb);
+}
+
+sub mxhr_request ($$@) {
+    my $cb = pop;
+    my ($method, $uri, %args) = @_;
 
     my $on_error = delete $args{on_error} || sub { 
         require Carp;
@@ -16,7 +23,7 @@ sub mxhr_get ($@) {
     };
     my $on_eof   = delete $args{on_eof} || sub { };
     my %state;
-    $state{guard} = http_get $uri, %args,
+    $state{guard} = http_request $method, $uri, %args,
         want_body_handle => 1,
         on_error  => $on_error,
         on_header => sub {
@@ -73,7 +80,7 @@ sub mxhr_get ($@) {
                 $handle->push_read(regex => $state{boundary_re}, $callback);
                 return 1;
             };
-    
+
             $handle->push_read(regex => $state{boundary_re}, $callback );
             return 1;
         }
@@ -111,11 +118,15 @@ WARNING: alpha quality code!
 
 =head2 mxhr_get $uri, key => value..., $cb->($body, $headers, $handle)
 
-Sends an HTTP GET request, and for each item in the multipar response, 
+Sends an HTTP GET request, and for each item in the multipar response,
 executes C<$cb>. C<$cb> receives the body of the item, and the sub headers
 within that item (NOT the initial headers)
 
 The callback should return a true value if it should keep reading.
+
+=head2 mxhr_request $method, $uri, key => value..., $cb->($body, $headers, $handle)
+
+Sends an HTTP request with the method specified. Works similarly to mxhr_get.
 
 =head1 AUTHOR
 
